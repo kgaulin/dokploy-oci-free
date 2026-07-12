@@ -23,6 +23,11 @@ variable "num_worker_instances" {
   description = "Number of Dokploy worker instances to deploy (max 3 for free tier)."
   type        = number
   default     = 1
+
+  validation {
+    condition     = var.num_worker_instances >= 0 && var.num_worker_instances <= 3
+    error_message = "Le free tier OCI permet au maximum 3 workers (1 main + 3 workers = 4 OCPU / 24 GB ARM)."
+  }
 }
 
 variable "availability_domain_main" {
