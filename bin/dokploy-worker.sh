@@ -16,15 +16,32 @@ apt-get update -y
 apt-get install -y openssh-server fail2ban
 
 # SSH hardening: key-based auth only (Dokploy connects as root with a key).
-# Use a drop-in so it wins over cloud-init's /etc/ssh/sshd_config.d/*.conf
+# Write to the MAIN sshd_config (this is what Dokploy's security checklist reads)
+# AND to a drop-in so it also wins over cloud-init's sshd_config.d/*.conf.
+harden_ssh() {
+  key="$1"; val="$2"
+  sed -i "/^[[:space:]]*#\?[[:space:]]*${key}[[:space:]]/Id" /etc/ssh/sshd_config
+  echo "${key} ${val}" >> /etc/ssh/sshd_config
+}
+harden_ssh PasswordAuthentication no
+harden_ssh UsePAM no
+harden_ssh PermitRootLogin prohibit-password
+
 cat > /etc/ssh/sshd_config.d/99-dokploy-hardening.conf <<'EOF'
 PermitRootLogin prohibit-password
 PasswordAuthentication no
 UsePAM no
 EOF
-systemctl restart sshd
+sshd -t && systemctl restart sshd
 
-# Brute force protection
+# Brute force protection: enable the SSH jail in aggressive mode
+cat > /etc/fail2ban/jail.d/dokploy-sshd.local <<'EOF'
+[sshd]
+enabled = true
+mode = aggressive
+maxretry = 3
+bantime = 1h
+EOF
 systemctl enable --now fail2ban
 
 # Firewall: OCI Ubuntu images already ship a default-deny iptables firewall
