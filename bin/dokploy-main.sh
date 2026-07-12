@@ -26,5 +26,6 @@ iptables -I INPUT 1 -p tcp --dport 7946 -j ACCEPT
 iptables -I INPUT 1 -p udp --dport 4789 -j ACCEPT
 netfilter-persistent save
 
-# Install Dokploy
+# Install Dokploy (pinned version)
+export DOKPLOY_VERSION=v0.29.11
 curl -sSL https://dokploy.com/install.sh | sh
