@@ -13,6 +13,12 @@ variable "source_image_id" {
   type        = string
 }
 
+variable "dashboard_allowed_cidr" {
+  description = "CIDR allowed to reach the Dokploy dashboard on port 3000. Restrict it to your IP (e.g. 203.0.113.5/32) for better security. Defaults to open."
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
 variable "num_worker_instances" {
   description = "Number of Dokploy worker instances to deploy (max 3 for free tier)."
   type        = number

@@ -47,12 +47,12 @@ resource "oci_core_security_list" "dokploy_security_list" {
   # Ingress Rules for Dokploy
   ingress_security_rules {
     protocol = "6" # TCP
-    source   = "0.0.0.0/0"
+    source   = var.dashboard_allowed_cidr
     tcp_options {
       min = 3000
       max = 3000
     }
-    description = "Allow HTTP traffic for Dokploy on port 3000"
+    description = "Allow HTTP traffic for Dokploy dashboard on port 3000"
   }
 
   # SSH
@@ -133,55 +133,61 @@ resource "oci_core_security_list" "dokploy_security_list" {
     description = "Allow Traefik HTTPS traffic on port 444"
   }
 
-  # Ingress rules for Docker Swarm
+  # Ingress rules for Docker Swarm — restricted to the VCN network only.
+  # These ports MUST NOT be exposed to the public internet (see Dokploy security docs).
   ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
+    protocol    = "6" # TCP
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
     tcp_options {
       min = 2376
       max = 2376
     }
-    description = "Allow Docker Swarm traffic on port 2376"
+    description = "Docker daemon (port 2376) - cluster network only"
   }
 
   ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
+    protocol    = "6" # TCP
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
     tcp_options {
       min = 2377
       max = 2377
     }
-    description = "Allow Docker Swarm traffic on port 2377"
+    description = "Swarm management (port 2377) - cluster network only"
   }
 
   ingress_security_rules {
-    protocol = "6" # TCP
-    source   = "0.0.0.0/0"
+    protocol    = "6" # TCP
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
     tcp_options {
       min = 7946
       max = 7946
     }
-    description = "Allow Docker Swarm traffic on port 7946"
+    description = "Swarm node discovery TCP (port 7946) - cluster network only"
   }
 
   ingress_security_rules {
-    protocol = "17" # UDP
-    source   = "0.0.0.0/0"
+    protocol    = "17" # UDP
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
     udp_options {
       min = 7946
       max = 7946
     }
-    description = "Allow Docker Swarm UDP traffic on port 7946"
+    description = "Swarm node discovery UDP (port 7946) - cluster network only"
   }
 
   ingress_security_rules {
-    protocol = "17" # UDP
-    source   = "0.0.0.0/0"
+    protocol    = "17" # UDP
+    source      = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
     udp_options {
       min = 4789
       max = 4789
     }
-    description = "Allow Docker Swarm UDP traffic on port 4789"
+    description = "Swarm overlay VXLAN (port 4789, no auth) - cluster network only"
   }
 
   # Egress Rule (optional, if needed)
